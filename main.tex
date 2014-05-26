@@ -1,0 +1,90 @@
+\documentclass{acm_proc_article-sp}
+
+\parindent 0pt
+\usepackage[ruled, vlined]{algorithm2e}
+\parindent 10pt
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[autostyle=false, style=english]{csquotes}
+\usepackage[usenames,dvipsnames]{color}
+\usepackage[nodayofweek]{datetime}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage[tableposition=top, font=bf]{caption}
+\usepackage{balance}
+\usepackage{enumitem}
+\usepackage{graphicx}
+\usepackage{gnuplottex}
+\usepackage{ifthen}
+\usepackage{quoting}
+\usepackage{sepfootnotes}
+\usepackage{setspace}
+\usepackage{xcolor}
+\usepackage[hyphens]{url}
+\usepackage[pdfpagelabels=false,draft=true]{hyperref}
+\usepackage{hypcap}
+
+\MakeOuterQuote{"}
+\def\algorithmautorefname{Algorithm}
+
+\newdateformat{lv}{\THEDAY{ }\monthname[\THEMONTH] \THEYEAR}
+\newcommand{\lastvisited}{Last visited \lv\today}
+\newcommand\TODO[1]{\emph{\color{Red} TODO: #1}}
+\newcommand\noop[1]{\emph{\emph{#1}}}
+\newcommand\edit[1]{\emph{\color{Green}#1}}
+\newcommand\code[1]{\texttt{#1}}
+\newcommand\coderef[1]{\texttt{\ref{#1}}}
+\newcommand\stringliteral[1]{\texttt{\char`\"#1\char`\"}}
+\newcommand\len[1]{|#1|}
+\newcommand\set[1]{\{#1\}}
+\newcommand\surl[1]{\urlstyle{ff}\url{#1}}
+\newcommand\Oof[1]{$\mathcal{O}(#1)$}
+\newboolean{fref}
+
+\begin{document}
+
+  \title{SlickChair}
+
+  \numberofauthors{1}
+
+  \author{
+    \alignauthor
+    Olivier Blanvillain\\
+           \affaddr{École Polytechnique Fédérale\\de Lausanne (EPFL)}\\
+           \affaddr{1015 Lausanne, Switzerland}\\
+           \email{\href{mailto:olivier.blanvillain@epfl.ch}{olivier.blanvillain@epfl.ch}}
+    \alignauthor
+  }
+  
+  \maketitle
+
+  \begin{abstract}
+    \input{0-abstract.mdtex}
+  \end{abstract}
+
+  % \category{C}{c1}{c2}[c3]
+  % \terms{term}
+  % \keywords{keywords}
+
+  \section{Introduction}
+  \label{introduction}
+  \input{1-introduction.mdtex}
+  
+  \section{Related Work}
+  \label{relatedwork}
+  \input{5-related-work.mdtex}
+  
+  \section{Conclusion and Future Work}
+  \label{conclusionandfuturework}
+  \input{6-conclusion-and-future-work.mdtex}
+  
+  \section{Acknowledgments}
+  \label{acknowledgments}
+  \input{7-acknowledgments.mdtex}
+
+  \balance
+
+  \bibliographystyle{abbrv}
+  \bibliography{short}
+  
+\end{document}
