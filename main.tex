@@ -21,7 +21,7 @@
 \usepackage{setspace}
 \usepackage{xcolor}
 \usepackage[hyphens]{url}
-\usepackage[pdfpagelabels=false,draft=true]{hyperref}
+\usepackage[pdfpagelabels=false,draft=false]{hyperref}
 \usepackage{hypcap}
 
 \MakeOuterQuote{"}
@@ -41,6 +41,9 @@
 \newcommand\Oof[1]{$\mathcal{O}(#1)$}
 \newboolean{fref}
 
+\newcommand{\pcm}{program committee member}
+\newcommand{\pcms}{program committee members}
+
 \begin{document}
 
   \title{SlickChair}
@@ -53,35 +56,16 @@
            \affaddr{École Polytechnique Fédérale\\de Lausanne (EPFL)}\\
            \affaddr{1015 Lausanne, Switzerland}\\
            \email{\href{mailto:olivier.blanvillain@epfl.ch}{olivier.blanvillain@epfl.ch}}
-    \alignauthor
   }
   
   \maketitle
 
   \begin{abstract}
-    \input{0-abstract.mdtex}
+    \input{abstract.mdtex}
   \end{abstract}
 
-  % \category{C}{c1}{c2}[c3]
-  % \terms{term}
-  % \keywords{keywords}
-
-  \section{Introduction}
-  \label{introduction}
-  \input{1-introduction.mdtex}
+  \input{content.mdtex}
   
-  \section{Related Work}
-  \label{relatedwork}
-  \input{5-related-work.mdtex}
-  
-  \section{Conclusion and Future Work}
-  \label{conclusionandfuturework}
-  \input{6-conclusion-and-future-work.mdtex}
-  
-  \section{Acknowledgments}
-  \label{acknowledgments}
-  \input{7-acknowledgments.mdtex}
-
   \balance
 
   \bibliographystyle{abbrv}
