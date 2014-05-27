@@ -21,7 +21,7 @@
 \usepackage{setspace}
 \usepackage{xcolor}
 \usepackage[hyphens]{url}
-\usepackage[pdfpagelabels=false,draft=false]{hyperref}
+\usepackage[pdfpagelabels=false,draft=true]{hyperref}
 \usepackage{hypcap}
 
 \MakeOuterQuote{"}
@@ -43,6 +43,11 @@
 
 \newcommand{\pcm}{program committee member}
 \newcommand{\pcms}{program committee members}
+\newcommand{\cms}{conference management system}
+
+\makeatletter
+\def\@copyrightspace{\relax}
+\makeatother
 
 \begin{document}
 
@@ -69,6 +74,7 @@
   \balance
 
   \bibliographystyle{abbrv}
+  
   \bibliography{short}
   
 \end{document}
