@@ -15,6 +15,25 @@ We present SlickChair, an open-source \cms written in Scala. Build with the Play
  
 # Overview of SlickChair
 
+This section presents .. from the pov of different actors of the system: authors pcms and program chair.
+
+  - Submission of abstracts and papers by Authors. 
+  - Submission of reviews by the Program Committee 
+Members (PCM). 
+  - Download of papers by Program Committee (PC). 
+  - Handling of reviewers preferences and bidding. 
+  - Web-based assignment of papers to PCMs for 
+review. 
+  - Review progress tracking. 
+  - Web-based PC meeting. 
+  - Notification of acceptance/rejection. 
+  - Sending e-mails for notifications. 
+
+
+  - authors
+  - pcms
+  - program chair
+
   - login
   - actors
   - phases (workflow)
@@ -22,6 +41,8 @@ We present SlickChair, an open-source \cms written in Scala. Build with the Play
 Among his responsibilities, the assignment of submissions to \pcms can be a complex task. To be fair to all authors, submissions usually receive the same number of reviews, and this work has to be well distributed among \pcms so that no one overloaded. Moreover, \pcms might have conflicts of interests with certain submissions and different levels of knowledge depending on the topics. These constraints add up for
 
 # Data model
+
+@datomic
 
 datastorage database
 do not need transactions for most operations
@@ -34,6 +55,8 @@ still the go to product because of the abstraction layer, the backup capabilitie
   - single thread alternative for
 
 # Evaluation/Why scala
+
+Some subset of @ocs, @act, @symposion, @openconferenceware...
 
   - compilers, typechecking everywhere
   - server as a function
