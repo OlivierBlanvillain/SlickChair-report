@@ -15,19 +15,28 @@ We present SlickChair, an open-source \cms written in Scala. Build with the Play
  
 # Overview of SlickChair
 
-This section presents .. from the pov of different actors of the system: authors pcms and program chair.
+This section presents .. from the pov of different actors of the system: authors pcms and program chair. @mauro2005:
 
-  - Submission of abstracts and papers by Authors. 
-  - Submission of reviews by the Program Committee 
-Members (PCM). 
-  - Download of papers by Program Committee (PC). 
-  - Handling of reviewers preferences and bidding. 
-  - Web-based assignment of papers to PCMs for 
-review. 
-  - Review progress tracking. 
-  - Web-based PC meeting. 
-  - Notification of acceptance/rejection. 
-  - Sending e-mails for notifications. 
+- Submission of abstracts and papers by Authors
+- Submission of reviews by the Program Committee Members (PCM)
+- Download of papers by Program Committee (PC)
+- Handling of reviewers preferences and bidding
+- Web-based assignment of papers to PCMs for review
+- Review progress tracking
+- Web-based PC meeting
+- Notification of acceptance/rejection
+- Sending e-mails for notifications
+
+  1. Submission of papers
+  2. Assignment to reviewers
+  3. Mailings to PC members
+  4. Submissions of reviews
+  5. Reviewer comment threads
+  6. Distributed PC meeting
+  7. Letters to authors
+
+
+  Web-based assignment of papersWeb-based assignment of papers
 
 
   - authors
