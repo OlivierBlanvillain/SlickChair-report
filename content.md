@@ -15,6 +15,31 @@ We present SlickChair, an open-source \cms written in Scala. Build with the Play
  
 # Overview of SlickChair
 
+In this section gives an overview of functionalities of SlickChair. We first discuss how users.. (login, actors, phases (workflow))
+
+### User authentication
+
+The first contact between a system and its users is often via an authentication interface. Most \cmss require users to create new accounts, which usually implies filling a form, receiving a validation email and memorizing a new password. Recent web browser implement mechanisms to reduced the pain of filling form and memorizing passwords, but these solutions are usually limited to the use of a single computer.
+
+In SlickChair, we address this common problem by supporting 3 types of authentication mechanisms:
+
+- Authentication via Facebook account
+- Authentication via Google account
+- Authentication via email address
+
+The implementation of Facebook and Google login uses the OAuth 2.0 protocol @oauth2, and is provided by the SecureSocial authentication module for Play Framework @securesocial.
+
+In addition to associate each visitor with a unique identity, an objective of authentication is to get a valid email address to contact the user. This way, we avoid any chances of having typo in the email. When users login with Facebook or Google account, we trust the email address obtained via the OAuth protocol, given that both networks required their users to confirm their email address when they created their account. In the case of login via email, the process is obviously more complex. After providing his email address, a new user has to open his email client follow a validation link. From here, the user is asked his first name, last name, and a new password (of minimum 8 characters) before completing the registration. Passwords are hashed using the bcrypt algorithm @bcript and stored in the database. SlickChair also gives its users the usual options to change their password or recover their account in case of forgotten password. Although authentication via email address add complexity to the system, it is appreciated by users that have separated email accounts for their personal and professional life.
+
+
+### Actors
+
+- authors
+- \pcms
+- program chair
+
+### Workflow
+
 This section presents .. from the pov of different actors of the system: authors pcms and program chair. @mauro2005:
 
 - Submission of abstracts and papers by Authors
@@ -27,31 +52,26 @@ This section presents .. from the pov of different actors of the system: authors
 - Notification of acceptance/rejection
 - Sending e-mails for notifications
 
-  1. Submission of papers
-  2. Assignment to reviewers
-  3. Mailings to PC members
-  4. Submissions of reviews
-  5. Reviewer comment threads
-  6. Distributed PC meeting
-  7. Letters to authors
+1. Submission of papers
+2. Assignment to reviewers
+3. Mailings to PC members
+4. Submissions of reviews
+5. Reviewer comment threads
+6. Distributed PC meeting
+7. Letters to authors
 
+http://www.texample.net/tikz/examples/simple-flow-chart/
 
-  Web-based assignment of papersWeb-based assignment of papers
-
-
-  - authors
-  - pcms
-  - program chair
-
-  - login
-  - actors
-  - phases (workflow)
+texdoc pgfgantt
 
 Among his responsibilities, the assignment of submissions to \pcms can be a complex task. To be fair to all authors, submissions usually receive the same number of reviews, and this work has to be well distributed among \pcms so that no one overloaded. Moreover, \pcms might have conflicts of interests with certain submissions and different levels of knowledge depending on the topics. These constraints add up for
 
 # Data model
 
-@datomic
+- Logs where a requirement
+- Inspired from Datomic @datomic data model
+- Re-implemented some of Datomic's functionalities as a layer on top of Slick/AnySQL
+- Functionality and implementations are detailed in this section.
 
 datastorage database
 do not need transactions for most operations
