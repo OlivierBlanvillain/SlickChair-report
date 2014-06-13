@@ -9,7 +9,7 @@ The importance and confidentiality of the data manipulated by a \cms imply that 
 
 We present SlickChair, an open-source \cms written in Scala. Build with the Play framework and the Slick database access library, SlickChair provides a highly flexible and extensible solution to manage peer review processes. Our contributions are in particular:
 
-  - The plan
+- The plan
 
  
 # Overview of SlickChair
@@ -40,7 +40,7 @@ In SlickChair, we identify each user by a single email address. Some other \cmss
 
 [^essential]: The authors of @mauro2005 identified nine *typical* functionalities offered by \cmss to run online peer-review processes, which roughly correspond to the functionalities provided by SlickChair interfaces.
 
-Building SlickChair, our focused was on creating a flexible and extensible system rather than offering customization options via configuration. As a system becomes more complete, it's complexity is likely to go up, and maintaining and extending the system becomes harder. \TODO{Add ref to #evaluation.} SlickChair provides the essential[^essential] components to run an online peer-review process, listed below as the user interfaces of available for each user role:
+Building SlickChair, our focused was on creating a flexible and extensible system rather than offering customization options via configuration. As a system becomes more complete, it's complexity is likely to go up, and maintaining and extending the system becomes harder. SlickChair provides the essential[^essential] components to run an online peer-review process, listed below as the user interfaces of available for each user role:
 
 - Author
   
@@ -68,47 +68,62 @@ Building SlickChair, our focused was on creating a flexible and extensible syste
 
     - Send emails and change conference phases
 
-Most interfaces are very straightforward and will not be discussed here for brevity. The *change user roles* interface allows a program chair to design certain users as being co-chairs or \pcms. While it is also possible to define all \pcms and chairs in a configuration file before setting up a SlickChair instance, using this *change user roles* interface might be preferred to allow each user to chose his favourite login method. This accounts for the typical situation of users that forward messages send to their professional email addresses to other services such as Gmail.
+Most interfaces are very straightforward and will not be discussed here for brevity. The *change user roles* interface allows a \pc to design certain users as being co-chairs or \pcms. While it is also possible to define all \pcms and chairs in a configuration file before setting up a SlickChair instance, using this *change user roles* interface might be preferred to allow each user to chose his favourite login method. This accounts for the typical situation of users that forward messages send to their professional email addresses to other services such as Gmail.
 
 The *Send emails and change conference phases* interface is related to the conference workflow, discussed in the following subsection.
 
 
 ### Workflow
 
-code of Phase case class
+In order to coordinate the overall conference peer-review process, we organised the course of this process as a chronological sequence on phases. Each phase corresponds to the set of interfaces enabled during the during the particular time frame of the phase. We identified the following seven phases that may correspond to the workflow of a small conference: *Setup, Submission, Bidding, Assignment, Review, Notification, Finished*.
 
-Setup, Submission, Bidding, Assignment, Review, Notification, Done
+In addition to the configuration of enabled interfaces, each phase is defined with a function to generate emails, and function to generate an optional warning:
 
-- Submission of abstracts and papers by Authors
-- Submission of reviews by the Program Committee Members (PCM)
-- Download of papers by Program Committee (PC)
-- Handling of reviewers preferences and bidding
-- Web-based assignment of papers to PCMs for review
-- Review progress tracking
-- Web-based PC meeting
-- Notification of acceptance/rejection
-- Sending e-mails for notifications
+    case class Phase(
+      configuration: Configuration,
+      emails: Database => List[Email],
+      warning: Database => Option[String]
+    )
 
-1. Submission of papers
-2. Assignment to reviewers
-3. Mailings to PC members
-4. Submissions of reviews
-5. Reviewer comment threads
-6. Distributed PC meeting
-7. Letters to authors
+SlickChair uses the `emails` function before transitioning to a given phase to help the \pc in the redaction of notification emails, by suggesting appropriate recipients and giving a template for the body of the message. If a warning is returned by the second function, it will be display to the \pc before he confirms the change of phase and the sending of notifications.
 
-http://www.texample.net/tikz/examples/simple-flow-chart/
+Conferences of different sizes and topics might want to use different workflows. In the current stage of the project, such configuration has be done has source code level. As an example, we will show the changes needed to add a new component to the conference workflow. Suppose that some \pcms are careless about their reviewing responsibilities and do not sent respect the delays set by the \pc. The \pc might to send a reminder to the \pcms that have not yet completed their reviews. This could be implemented by adding the following phase between *Review* and *Notification*:
 
-texdoc pgfgantt
+    Phase(
+      Configuration("Review Reminder",
+        pcmemberCanReview=true,
+        pcmemberCanComment=true,
+        chairCanDecideOnAcceptance=true),
+      { db => Email(
+        lateReviewerEmails(db),
+        "Reminder: review deadline",
+        "Dear Program Committee Member, ...")},
+      noWarning
+    )
 
-Among his responsibilities, the assignment of submissions to \pcms can be a complex task. To be fair to all authors, submissions usually receive the same number of reviews, and this work has to be well distributed among \pcms so that no one overloaded. Moreover, \pcms might have conflicts of interests with certain submissions and different levels of knowledge depending on the topics. These constraints add up for
+Where `noWarning` a dummy function that never returns any warning, and `lateReviewerEmails` is a function returning the email addresses of all late reviewers. In order to compute the late reviewers, we need to use three tables of the database: the `assignments` and `reviews` tables are relations between \pcms and submissions, and the `persons` table contains personal information of SlickChair users.
 
+    def lateReviewerEmails(db: Database) = {
+      val assignmentPairs = db.assignments
+        .filter(_.value)
+        .map(a => (a.personId, a.paperId))
+      val reviewsPairs = db.reviews
+        .map(r => (r.personId, r.paperId))
+      (assignmentPairs diff reviewsPairs)
+        .join(db.persons).on(_._1 is _.id)
+        .map(_._2.email).list(db.s)
+    }
+
+This function illustrates the use of the Slick database query library. Except for `.join().on()` and `.list(db.s)`, the code is would be identical if the members of `db` where Sets from the Scala collections. In reality, the entier body of this function will be compiled into a SQL query. The `.join().on()` allows to join two tables on certain columns, and returns pairs of matching rows. `.list()` wraps up the query definition and returns the result of execution as a list of Scala objects. 
 
 # Paper-reviewer assignment
 
+Among his responsibilities, the assignment of submissions to \pcms can be a complex task. To be fair to all authors, submissions usually receive the same number of reviews, and this work has to be well distributed among \pcms so that no one overloaded. Moreover, \pcms might have conflicts of interests with certain submissions and different levels of knowledge depending on the topics. These constraints add up for
+
 It's NP-Hard :(
-@garg10
+@garg2010
 <http://www.cs.uky.edu/~goldsmit/papers/GodlsmithSloanPaperAssignment.pdf>
+
 
 # Data model
 
@@ -121,25 +136,19 @@ datastorage database
 do not need transactions for most operations
 still the go to product because of the abstraction layer, the backup capabilities and the power of the query engine.
 
-  - functional, immutable database
-  - database as a value, queries as a function
-  - timestamp implementation
-  - allows for concurrent read/write
-  - single thread alternative for
+- functional, immutable database
+- database as a value, queries as a function
+- timestamp implementation
+- allows for concurrent read/write
+- single thread alternative for
 
-# Evaluation
-
-Some subset of @ocs, @act, @symposion, @openconferenceware...
-
-  - compilers, typechecking everywhere
-  - server as a function
-  - case classes all the way
 
 # Future work:
 
-  - Macros
-  - Scala.js
+- Macros
+- Scala.js
+
 
 # Conclusion
 
-  - ...
+- ...

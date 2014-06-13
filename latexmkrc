@@ -17,5 +17,5 @@ sub md2tex {
     s/#([A-Za-z0-9-]+)/\\\\autoref{\\1}/g
     s/@@ /@/g
     s/## /#/g
-    ' | pandoc -f markdown -t latex -o $_[0].mdtex");
+    ' | pandoc --listings -f markdown -t latex -o $_[0].mdtex");
 };
