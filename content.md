@@ -1,3 +1,6 @@
+# ABSTRACT {-}
+
+Ut in dolor et magna tincidunt mattis. Proin id pulvinar arcu. Donec ac turpis consectetur, dignissim eros at, mollis orci. Nunc sed tincidunt justo, eu dapibus risus. Vestibulum nisi mi, tempus nec cursus at, accumsan vitae metus. Cras mattis, velit ut convallis lacinia, metus enim rutrum sapien, quis egestas ante ipsum ut lacus. Aliquam erat volutpat. Mauris vitae commodo nisi. Nunc iaculis, enim vulputate cursus interdum, sapien libero sodales diam, viverra molestie diam tellus eu felis. Quisque gravida porttitor vulputate. Duis nec neque facilisis, porttitor ante id, molestie sem. Vivamus pellentesque venenatis est, ut consequat arcu tempus a. Phasellus ullamcorper nunc vel rhoncus suscipit. Curabitur commodo ornare accumsan. Mauris vitae lorem arcu. Mauris vel turpis mi. Fusce faucibus congue ante, eu gravida sem. Cum sociis natoque penatibus et magnis dis.
 
 # Introduction
 
@@ -68,10 +71,9 @@ Building SlickChair, our focused was on creating a flexible and extensible syste
 
     - Send emails and change conference phases
 
-Most interfaces are very straightforward and will not be discussed here for brevity. The *change user roles* interface allows a \pc to design certain users as being co-chairs or \pcms. While it is also possible to define all \pcms and chairs in a configuration file before setting up a SlickChair instance, using this *change user roles* interface might be preferred to allow each user to chose his favourite login method. This accounts for the typical situation of users that forward messages send to their professional email addresses to other services such as Gmail.
+The *Change user roles* interface allows a \pc to design certain users as being co-chairs or \pcms. While it is also possible to define all \pcms and chairs in a configuration file before setting up a SlickChair instance, using this *change user roles* interface might be preferred to allow each user to chose his favourite login method. This accounts for the typical situation of users that forward messages send to their professional email addresses to other services such as Gmail.
 
-The *Send emails and change conference phases* interface is related to the conference workflow, discussed in the following subsection.
-
+The *Send emails and change conference phases* interface is related to the conference workflow, discussed in the following subsection. *Assign submissions for review* is discussed in detail #paper-reviewer-assignment. Other interfaces are quite simple and wont be described for brevity. 
 
 ### Workflow
 
@@ -114,41 +116,80 @@ Where `noWarning` a dummy function that never returns any warning, and `lateRevi
         .map(_._2.email).list(db.s)
     }
 
-This function illustrates the use of the Slick database query library. Except for `.join().on()` and `.list(db.s)`, the code is would be identical if the members of `db` where Sets from the Scala collections. In reality, the entier body of this function will be compiled into a SQL query. The `.join().on()` allows to join two tables on certain columns, and returns pairs of matching rows. `.list()` wraps up the query definition and returns the result of execution as a list of Scala objects. 
+This function illustrates the use of the Slick database query library. Except for `.join().on()` and `.list(db.s)`, the code would be identical if manipulating Sets from the Scala collections. In reality, the entire body of this function will be compiled into a SQL query. The `.join().on()` allows to join two tables on certain columns, and returns pairs of matching rows. `.list()` wraps up the query definition and returns the result of execution as a list of Scala objects. 
+
+
+# Data model
+
+One of SlickChair's feature is it's ability to log all the actions and events that occurred in the system. To do so, a traditional approach could use the logging functionalities build into the Play framework. Concretely, this would corresponds to appending a timestamp and a messages to a text file whenever an interesting event occurs. We took an alternative approach which consists in memorizing every change at the level of the database.
+
+The idea of append only databases is not new, but it is becoming more and more relevant as the prices of storage go down. The Datomic database @datomic which recently entered the market  is build around this idea of never altering or deleting data. Instead, changes are made by adding new version of the existing data or marking it as being invalid. However, Datomic is a proprietary software and does not fit well  with the open-source platform SlickChair is build upon.
+
+In order to suite our needs, we build a small layer on top of Slick to manipulate versioned data. The semantic of the API presented in this section are inspired by Datomic's Clojure API @datomicapi.
+
+### Database as a value
+
+One of the core concept of functional programming the manipulation of immutable data. But how could a database be seen as immutable? Instead if manipulating directly the live, mutating database, we define a `Database` to be a view of the data on at a particular time `date`:
+
+    case class Database(
+        val date: DateTime, val s: Session) {
+      val persons = table[Person]
+      val personRoles = table[PersonRole]
+      val papers = table[Paper]
+      val paperAuthors = table[PaperAuthor]
+      val paperDecisions = table[PaperDecision]
+      val comments = table[Comment]
+      val reviews = table[Review]
+      val files = table[File]
+      val emails = table[Email]
+      val bids = table[Bid]
+      val assignments = table[Assignment]
+      val configurations = table[Configuration]
+    }
+
+Here, manipulations done on this object, such as the function `lateReviewerEmails` define in #workflow, will see the world as it was at time `date`. Hence, calling this function with the same argument will always return the same result: the query is a pure function and the `Database` is a value.
+
+A `Connection` allows to retrieve the value of the current `Database`, and insert new elements in the database. The `insert` method returns two `Database` values, value just before and just after the insertion.
+
+    case class Connection(s: Session) {
+      def currentDatabase(): Database
+      def insert(x: List[Model[_]]):
+            (Database, Database)
+    }
+
+The last definition of this API is the `Model` trait, which enforces that the elements stored in tables are case classes defined with a `metadata` field with the appropriate information:
+
+    case class Id[M](value: UUID)
+
+    type Meta[M] = (Id[M], DateTime, String)
+
+    trait Model[M] {
+      this: M { def metadata: Meta[M] } =>
+      val (id, updatedAt, updatedBy) = metadata
+    }
+
+This API takes full advantage of Scala and Slick type-checking capabilities. Thanks to the type parameter on `Id`, the compiler will detect errors such as miss using the `Id` of a person as the `Id` of a submission.
+
+### Implementation
+
+Under the hood, SlickChair create multiple database records for a given *natural key*. When using the `Database` object, the user defined query is composed with a temporal filter that extracts the most recent records that where created before the `date` timestamp of the `Database`. This corresponds to the *Type 2 slowly changing dimension management methodology*, as described in @kimball2002.
+
+This approach has the advantage to no require any update, new records are simply appended to tables and only become visible for the newly accessed `Database` values. It also minimises the number of tables, which is beneficial as tables directly manipulated by the user via Slick's domain-specific language. We development this API with H2 and PostgreSQL, but as the implementation uses Slick's generic `JdbcDriver`, it should be compatible with all Slick's supported database systems.
+
+Finally, we should note that in it's current stage, our *database as a value* abstraction does not allow the expression of transactions. Our timestamp based implementation is by nature atomic: the temporal filter used on every table ensures that the database will be viewed either before of after an insertion. However it is currently impossible to express a *transaction*, which would mean enforce that the database is not modified between the time when it's value is queried and the insertion are effective. Fortunately SlickChair does not require such semantic.
+
 
 # Paper-reviewer assignment
 
-Among his responsibilities, the assignment of submissions to \pcms can be a complex task. To be fair to all authors, submissions usually receive the same number of reviews, and this work has to be well distributed among \pcms so that no one overloaded. Moreover, \pcms might have conflicts of interests with certain submissions and different levels of knowledge depending on the topics. These constraints add up for
+One of the main responsibility of the \pc is the assignment of submissions to \pcms. While this could reasonably be done manually for a small number of submissions, the task quickly becomes complex as the number of submissions goes up. In fact, several mathematical formulations are know to be NP-Hard. We will see how we formulated the problem using the OscaR operational research library, which implements convenient search patters to explore the state of possible assignments with a limited time constraint.
+
+To be fair to all authors, submissions usually receive the same number of reviews, and this work has to be well distributed among \pcms so that no one overloaded. Moreover, \pcms might have conflicts of interests with certain submissions and different levels of knowledge depending on the topics. These constraints add up for
 
 It's NP-Hard :(
 @garg2010
 <http://www.cs.uky.edu/~goldsmit/papers/GodlsmithSloanPaperAssignment.pdf>
 
+# Conclusion and future work:
 
-# Data model
-
-- Logs where a requirement
-- Inspired from Datomic @datomic data model
-- Re-implemented some of Datomic's functionalities as a layer on top of Slick/AnySQL
-- Functionality and implementations are detailed in this section.
-
-datastorage database
-do not need transactions for most operations
-still the go to product because of the abstraction layer, the backup capabilities and the power of the query engine.
-
-- functional, immutable database
-- database as a value, queries as a function
-- timestamp implementation
-- allows for concurrent read/write
-- single thread alternative for
-
-
-# Future work:
-
-- Macros
+- Macros (remove boilerplate on the database API)
 - Scala.js
-
-
-# Conclusion
-
-- ...
