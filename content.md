@@ -2,6 +2,7 @@
 
 Ut in dolor et magna tincidunt mattis. Proin id pulvinar arcu. Donec ac turpis consectetur, dignissim eros at, mollis orci. Nunc sed tincidunt justo, eu dapibus risus. Vestibulum nisi mi, tempus nec cursus at, accumsan vitae metus. Cras mattis, velit ut convallis lacinia, metus enim rutrum sapien, quis egestas ante ipsum ut lacus. Aliquam erat volutpat. Mauris vitae commodo nisi. Nunc iaculis, enim vulputate cursus interdum, sapien libero sodales diam, viverra molestie diam tellus eu felis. Quisque gravida porttitor vulputate. Duis nec neque facilisis, porttitor ante id, molestie sem. Vivamus pellentesque venenatis est, ut consequat arcu tempus a. Phasellus ullamcorper nunc vel rhoncus suscipit. Curabitur commodo ornare accumsan. Mauris vitae lorem arcu. Mauris vel turpis mi. Fusce faucibus congue ante, eu gravida sem. Cum sociis natoque penatibus et magnis dis.
 
+
 # Introduction
 
 Peer reviewing is a central process in the organisation of scientific conferences. It involves multiple interactions between it's participants: *authors* share their work with the *program committee* which is then in charge of reviewing these submissions. A *program chair* is designated to coordinate the process and decide on final submission acceptance. While this peer review process could be implemented by simply exchanging emails between participants, manually gathering submissions, assigning them to \pcms, aggregating the reviews and finally notifying the authors requires substantial efforts. The use of a dedicated software, called \cms, can greatly simplifies this process.
@@ -18,7 +19,6 @@ We present SlickChair, an open-source \cms written in Scala. Build with the Play
 # Overview of SlickChair
 
 In this section gives an overview of functionalities of SlickChair. We first discuss how users.. (login, actors, phases (workflow))
-
 
 ### User authentication
 
@@ -38,12 +38,11 @@ In addition to associate each visitor with a unique identity, an objective of au
 
 In SlickChair, we identify each user by a single email address. Some other \cmss provide the ability to link multiple email addresses to a single identity and to multiple merge accounts into one. We believe that such functionality can sometimes be confusing, and adds a lot of complexity to the system. As a side note, this design makes it possible for a user to close the Facebook or Google account he used to login, and still claim his identity by going thought the process of logging in using the corresponding email address.
 
-
 ### SlickChair interfaces
 
-[^essential]: The authors of @mauro2005 identified nine *typical* functionalities offered by \cmss to run online peer-review processes, which roughly correspond to the functionalities provided by SlickChair interfaces.
+[^essential]: The authors of @mauro2005 identified nine *typical* functionalities offered by \cmss to run online peer review processes, which roughly correspond to the functionalities provided by SlickChair interfaces.
 
-Building SlickChair, our focused was on creating a flexible and extensible system rather than offering customization options via configuration. As a system becomes more complete, it's complexity is likely to go up, and maintaining and extending the system becomes harder. SlickChair provides the essential[^essential] components to run an online peer-review process, listed below as the user interfaces of available for each user role:
+Building SlickChair, our focused was on creating a flexible and extensible system rather than offering customization options via configuration. As a system becomes more complete, it's complexity is likely to go up, and maintaining and extending the system becomes harder. SlickChair provides the essential[^essential] components to run an online peer review process, listed below as the user interfaces of available for each user role:
 
 - Author
   
@@ -77,12 +76,11 @@ The *Send emails and change conference phases* interface is related to the confe
 
 ### Workflow
 
-In order to coordinate the overall conference peer-review process, we organised the course of this process as a chronological sequence on phases. Each phase corresponds to the set of interfaces enabled during the during the particular time frame of the phase. We identified the following seven phases that may correspond to the workflow of a small conference: *Setup, Submission, Bidding, Assignment, Review, Notification, Finished*.
+In order to coordinate the overall conference peer review process, we organised the course of this process as a chronological sequence on phases. Each phase corresponds to the set of interfaces enabled during the during the particular time frame of the phase. We identified the following seven phases that may correspond to the workflow of a small conference: *Setup, Submission, Bidding, Assignment, Review, Notification, Finished*.
 
 In addition to the configuration of enabled interfaces, each phase is defined with a function to generate emails, and function to generate an optional warning:
 
-    case class Phase(
-      configuration: Configuration,
+    case class Phase(      configuration: Configuration,
       emails: Database => List[Email],
       warning: Database => Option[String]
     )
@@ -179,15 +177,43 @@ This approach has the advantage to no require any update, new records are simply
 Finally, we should note that in it's current stage, our *database as a value* abstraction does not allow the expression of transactions. Our timestamp based implementation is by nature atomic: the temporal filter used on every table ensures that the database will be viewed either before of after an insertion. However it is currently impossible to express a *transaction*, which would mean enforce that the database is not modified between the time when it's value is queried and the insertion are effective. Fortunately SlickChair does not require such semantic.
 
 
-# Paper-reviewer assignment
+# Submission-reviewer assignment
 
-One of the main responsibility of the \pc is the assignment of submissions to \pcms. While this could reasonably be done manually for a small number of submissions, the task quickly becomes complex as the number of submissions goes up. In fact, several mathematical formulations are know to be NP-Hard. We will see how we formulated the problem using the OscaR operational research library, which implements convenient search patters to explore the state of possible assignments with a limited time constraint.
+One of the main responsibility of the \pc is the assignment of submissions to \pcms. While this could reasonably be done manually for a small number of submissions, the task quickly becomes complex as the number of submissions goes up. In fact, several mathematical formulations are know to be NP-Hard. We will see how we formulated the problem using the OscaR operational research library, which implements search patters to explore the space of all possible assignments under limited time constraints.
 
-To be fair to all authors, submissions usually receive the same number of reviews, and this work has to be well distributed among \pcms so that no one overloaded. Moreover, \pcms might have conflicts of interests with certain submissions and different levels of knowledge depending on the topics. These constraints add up for
+To be fair to all authors, submissions usually receive the same number of reviews, and this work has to be well distributed among \pcms so that no one overloaded. Moreover, \pcms might have conflicts of interests and varying levels of knowledge depending on the topics. Given these constraints, one can associate numeric value to each submission-reviewer assignment in order to create a total order on all the valid assignments.
 
-It's NP-Hard :(
-@garg2010
-<http://www.cs.uky.edu/~goldsmit/papers/GodlsmithSloanPaperAssignment.pdf>
+### Mathematical formulation
+
+This problem can be seen as a generalization of the stable marriage problem. On one side, the reviewers emitted preferences for the submissions in the form of bids, called the *interest preference*. One the other side, submissions can be seen as being willing to be matched with expert reviewers, the *expertise preference*. In the case of a peer review system, the problem is generalized in the following ways:
+
+- *Polyamory*: submissions and reviews are matched many-to-many instead of one-to-one.
+
+- *Indifference*: interest and expertise preference contain ties between instead of being total ordered. 
+
+- *Incomplete lists*: conflict of interest forbid certain assignment, removing element from the candidate lists.
+
+While each individual variant can be solved in polynomial time, the combination of the three generalizations is NP-complete @goldsmith2007. An approximation algorithm to maximize fairness among the review is discussed in @garg2010, but it revolves around repetitively solving linear programmes, which not a practical solution.
+
+### OscaR formulation
+
+OscaR is a Scala library for solving Operations Research problems @oscar. Among other techniques, OscaR allows to formulate problems using constraint programming. Given a matrix `bids`, a list of `conflicts`, and four integers `nPapers`, `nReviewers`, `nReviewPerPaper` and `nReviewsPerReviewer`, the following program searches for an assignment maximizing the sum of reviewer satisfaction:
+
+    val m = makeMatrix(nReviewers, nPapers, 0 to 1)
+
+    0 until nPapers foreach { j =>
+      add(sum(m col j) == nReviewPerPaper) }
+    0 until nReviewers foreach { i =>
+      add(sum(m row i) == nReviewsPerReviewer) }
+    conflicts foreach {
+      add(m(_, _) == 0) }
+
+    maximize(weightedSum(bids, m)) search {
+      binaryMaxDegree(m.flatten.toSeq) }
+    onSolution { return m } start()
+
+In this code, the `add` function adds a constraint to the definition problem. In this order, it is used to enforce that all submissions have the same number of review, all all reviewers have the same of review, and no conflicting assignment is made. The `maximize() search {}` and `onSolution {} start()` are OscaR constructs to define the objective function, the search heuristic and start the resolution. Some preparation is required to assemble the data in an appropriate form, which notably includes the addition of dummy submissions such that repartition of reviews is perfectly balanced among reviewers. Dummy papers are assigned with the maximum bid, which according to the experimental evaluation of @garg2010 leads to better results.
+
 
 # Conclusion and future work:
 
