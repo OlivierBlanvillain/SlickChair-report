@@ -1,13 +1,8 @@
 \documentclass{acm_proc_article-sp}
 
-\parindent 0pt
-\usepackage[ruled, vlined]{algorithm2e}
-\parindent 10pt
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
 \usepackage[autostyle=false, style=english]{csquotes}
-\usepackage[usenames,dvipsnames]{color}
-\usepackage[nodayofweek]{datetime}
 \usepackage{amssymb}
 \usepackage{booktabs}
 \usepackage[tableposition=top, font=bf]{caption}
@@ -18,7 +13,6 @@
 \usepackage{graphicx}
 \usepackage{gnuplottex}
 \usepackage{listings}
-\usepackage{ifthen}
 \usepackage{quoting}
 \usepackage{sepfootnotes}
 \usepackage{setspace}
@@ -54,9 +48,7 @@
   innerbottommargin=2pt]{lstlisting}
   
 \MakeOuterQuote{"}
-\def\algorithmautorefname{Algorithm}
 
-\newdateformat{lv}{\THEDAY{ }\monthname[\THEMONTH] \THEYEAR}
 \newcommand{\lastvisited}{Last visited \lv\today}
 \newcommand\TODO[1]{\emph{\color{Red} TODO: #1}}
 \newcommand\noop[1]{\emph{\emph{#1}}}
@@ -82,7 +74,7 @@
 
 \begin{document}
 
-  \title{SlickChair}
+  \title{The SlickChair Conference Management System}
 
   \numberofauthors{1}
 

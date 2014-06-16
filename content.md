@@ -1,6 +1,6 @@
 # ABSTRACT {-}
 
-Ut in dolor et magna tincidunt mattis. Proin id pulvinar arcu. Donec ac turpis consectetur, dignissim eros at, mollis orci. Nunc sed tincidunt justo, eu dapibus risus. Vestibulum nisi mi, tempus nec cursus at, accumsan vitae metus. Cras mattis, velit ut convallis lacinia, metus enim rutrum sapien, quis egestas ante ipsum ut lacus. Aliquam erat volutpat. Mauris vitae commodo nisi. Nunc iaculis, enim vulputate cursus interdum, sapien libero sodales diam, viverra molestie diam tellus eu felis. Quisque gravida porttitor vulputate. Duis nec neque facilisis, porttitor ante id, molestie sem. Vivamus pellentesque venenatis est, ut consequat arcu tempus a. Phasellus ullamcorper nunc vel rhoncus suscipit. Curabitur commodo ornare accumsan. Mauris vitae lorem arcu. Mauris vel turpis mi. Fusce faucibus congue ante, eu gravida sem. Cum sociis natoque penatibus et magnis dis.
+Ut[^name] in dolor et magna tincidunt mattis. Proin id pulvinar arcu. Donec ac turpis consectetur, dignissim eros at, mollis orci. Nunc sed tincidunt justo, eu dapibus risus. Vestibulum nisi mi, tempus nec cursus at, accumsan vitae metus. Cras mattis, velit ut convallis lacinia, metus enim rutrum sapien, quis egestas ante ipsum ut lacus. Aliquam erat volutpat. Mauris vitae commodo nisi. Nunc iaculis, enim vulputate cursus interdum, sapien libero sodales diam, viverra molestie diam tellus eu felis. Quisque gravida porttitor vulputate. Duis nec neque facilisis, porttitor ante id, molestie sem. Vivamus pellentesque venenatis est, ut consequat arcu tempus a. Phasellus ullamcorper nunc vel rhoncus suscipit. Curabitur commodo ornare accumsan. Mauris vitae lorem arcu. Mauris vel turpis mi. Fusce faucibus congue ante, eu gravida sem. Cum sociis natoque penatibus et magnis dis.
 
 
 # Introduction
@@ -11,14 +11,18 @@ Over the last few years, numerous web \cms have been developed. A recent compara
 
 The importance and confidentiality of the data manipulated by a \cms implies that security a major concern. Closed source solutions are mainly available as hosted services, therefore requiring conference organisers to trust quality of the code, the robustness of the infrastructure and the respect of data privacy. The open-source solutions we considered where not providing satisfactory levels of security. For example, Open Conference Systems sends a copy of user passwords by email in plain text when the registration is completed. HotCRP @hotcrp has a similar flaw: it sends login links to users with passwords as part of the URLs. As none of the available solutions meet our requirements, we decided to build our own.
 
-We present SlickChair, an open-source \cms written in Scala. Build with the Play framework and the Slick database access library, SlickChair provides a highly flexible and extensible solution to manage peer review processes. Our contributions are in particular:
+We present SlickChair, an open-source \cms written in Scala. Build with the Play framework and the Slick database access library, SlickChair provides a highly flexible and extensible solution to manage peer review processes. This report makes the following contributions:
 
-- The plan
+- We briefly introduce SlickChair and present the aspects where this new system provides a gain compared already established \cmss such as EasyChair. In particular, SlickChair offers the ability to authenticate using a Facebook or Google account, thus replacing the tedious password creation and email validation process.
 
- 
+- We present a new API to manipulate versioned date on an append only database. Build on top of the Slick, our API combine the power of Scala type-checking with the benefits of using an immutable database.
+
+- We show how we implemented SlickChair's automatic paper-reviewer assignment algorithm. Unfortunately, accounting for both \pcm preferences and conflicts of interest leads to an NP-Complete problem. While aiming for the optimal assignment is not possible, we opted for a very simple heuristic algorithm implemented with the help of the OscaR operational research library. 
+
+
 # Overview of SlickChair
 
-\TODO{In this section gives an overview of functionalities of SlickChair.}
+We begin our discussion with a short overview of SlickChair. We first present the three supported authentication mechanisms, Facebook, Google and email address, followed by an outline of the different user interfaces. The section concludes with a description of the default peer-review workflow and an example of customisation.
 
 ### User authentication
 
@@ -38,7 +42,7 @@ In addition to associating each visitor to a unique identity, authentication all
 
 In SlickChair, we identify each user by a single email address. Some other \cmss provide the ability to link multiple email addresses to a single identity and to multiple merge accounts into one. We believe that this functionality can sometimes be confusing, and adds unnecessary complexity to the system. As a side note, this design makes it possible for a user to close the Facebook or Google account he used to login, and claim his identity by going thought the process of logging in using the corresponding email address.
 
-### SlickChair interfaces
+### User interfaces
 
 [^essential]: The authors of @mauro2005 identified nine *typical* functionalities of \cmss which roughly correspond to the functionalities provided by SlickChair interfaces.
 
@@ -178,13 +182,11 @@ Finally, we should note that in it's current stage, our *database as a value* AP
 
 # Paper-reviewer assignment
 
-One of the main responsibility of the \pc is the assignment of submissions to \pcms. While this could reasonably be done manually for a small number of submissions, the task quickly becomes complex as the number of submissions goes up. In fact, the mathematical formulation is known to be NP-Complete. We will see how we formulated the problem using the OscaR operational research library, which provide different search patters to explore the space of all possible assignments under limited time constraints.
-
-To be fair to all authors, submissions usually receive the same number of reviews, and these reviews have to be well distributed among \pcms so that no one is overloaded. Moreover, \pcms might have conflicts of interests and varying levels of knowledge on the different topics. \TODO{Refrase: Given these constraints, one can associate numeric value to each submission-reviewer assignment in order to create a total order on all the valid assignments.}
+One of the main responsibility of the \pc is the assignment of submissions to \pcms for reviews. In order to provide the best quality reviews, the \pc typically asks \pcms to bid on submissions, and uses this information to guide the assignment. While this task could reasonably be done manually for a small number of submissions, it quickly becomes difficult as the number of submissions goes up. In fact, the mathematical formulation is known to be NP-Complete. We will see how we formulated this problem using the OscaR operational research library, which provide different search patters to explore the space of all possible assignments under limited time constraints.
 
 ### Mathematical formulation
 
-This problem can be seen as a generalization of the stable marriage problem. On one side, the reviewers emitted preferences for the submissions in the form of bids, called the *interest preference*. On the other side, authors want their submissions to be reviewed by \pcms with topic knowlage, the *expertise preference*. The paper-reviewer-assignment problem is a generalization of the traditional stable marriage problem in the following ways:
+This problem can be seen as a generalization of the stable marriage problem. On one side, the reviewers emitted preferences for the submissions in the form of bids, called the *interest preference*. On the other side, authors want their submissions to be reviewed by \pcms with topic knowledge, the *expertise preference*. The paper-reviewer-assignment problem is a generalization of the traditional stable marriage problem in the following ways:
 
 - *Polyamory*: submissions and reviews are matched many-to-many instead of one-to-one.
 
