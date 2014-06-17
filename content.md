@@ -1,20 +1,20 @@
 # ABSTRACT {-}
 
-Ut nsem in dolor et magna tincidunt mattis. Proin id pulvinar arcu. Donec ac turpis consectetur, dignissim eros at, mollis orci. Nunc sed tincidunt justo, eu dapibus risus. Vestibulum nisi mi, tempus nec cursus at, accumsan vitae metus. Cras mattis, velit ut convallis lacinia, metus enim rutrum sapien, quis egestas ante ipsum ut lacus. Aliquam erat volutpat. Mauris vitae commodo nisi. Nunc iaculis, enim vulputate cursus interdum, sapien libero sodales diam, viverra molestie diam tellus eu felis. Quisque gravida porttitor vulputate. Duis nec neque facilisis, porttitor ante id, molestie sem.
+Online \cmss are becoming an essential component of the organisation of scientific conferences. Their main objective is to minimise the cost of operation and communication while maintaining the high quality of the peer review process. As the web becomes the primary platform to run computer software, users have raised there expectations: one-click authentication, revision history, mobile device support; these are all features we expect to see in today's web applications. In this document, we report our experience building SlickChair: a modern \cms build with state-of-the-art web application technologies. Our discussion consists in presenting SlickChair authentication mechanism, describing the structure of a conference workflow, introducing a new API to manipulate versioned data, and presenting our implementation of an automatic paper-reviewer assignment algorithm.
 
 # Introduction
 
-Peer reviewing is a central process in the organisation of scientific conferences. It involves multiple interactions between it's participants: *authors* share their work with the *program committee* which is then in charge of reviewing these submissions. A *program chair* is designated to coordinate the process and decide on final submission acceptance. While this process could be implemented by exchanging emails, manually gathering submissions, assigning them to the program committee, aggregating the reviews and finally notifying the authors would require substantial efforts. The use of a dedicated software, called \cms, can greatly simplifies this process.
+Peer reviewing is a central process in the organisation of scientific conferences. It involves multiple interactions between its participants: *authors* share their work with the *program committee* which is then in charge of reviewing these submissions. A *program chair* is designated to coordinate the process and decide on final submission acceptance. While this process could be implemented by exchanging emails, manually gathering submissions, assigning them to the program committee, aggregating the reviews and finally notifying the authors would require substantial efforts. The use of a dedicated software, called \cms, can greatly simplifies this process.
 
 Over the last few years, numerous web \cms have been developed. A recent comparative study @parra2013 shows that Easychair @easychair is by large the most popular platform, having been used in about 68% of conferences organized with online \cms. The following four systems in term of number of conferences are EDAS @edas with 8.5%, Open Conference Systems @ocs with 6%, START V2 @startv2 with 5.7% and ConfTool @conftool with 5.3%. However, out of these five systems, only Open Conference Systems is open-source. Easychair and ConfTool offer free licenses for restricted versions and START V2 and EDAS are only commercial available.
 
 The importance and confidentiality of the data manipulated by a \cms implies that security a major concern. Closed source solutions are mainly available as hosted services, therefore requiring conference organisers to trust quality of the code, the robustness of the infrastructure and the respect of data privacy. The open-source solutions we considered where not providing satisfactory levels of security. For example, Open Conference Systems sends a copy of user passwords by email in plain text when the registration is completed. HotCRP @hotcrp has a similar flaw: it sends login links to users with passwords as part of the URLs. As none of the available solutions meet our requirements, we decided to build our own.
 
-We present SlickChair, an open-source \cms written in Scala. Build with the Play framework and the Slick database access library, SlickChair provides a highly flexible and extensible solution to manage peer review processes. This report makes the following contributions:
+We present SlickChair, an open-source \cms written in Scala. Built with the Play framework and the Slick database access library, SlickChair provides a highly flexible and extensible solution to manage peer review processes. This report makes the following contributions:
 
-- We briefly introduce SlickChair functionalities and present the aspects where this new system provides a gain compared already established \cmss such as EasyChair. In particular, SlickChair offers the ability to authenticate using a Facebook or Google account, thus replacing the tedious password creation and email validation process.
+- We briefly introduce SlickChair and present the functionalities that differentiate it from already established \cmss such as EasyChair. In particular, we discuss the ability to authenticate using a Facebook or Google account, and the high flexible of the workflow engine.
 
-- We present a new API to manipulate versioned date on an append only database. Build on top of the Slick, our API combine the power of Scala type-checking with the benefits of using an immutable database.
+- We present a new API to manipulate versioned data on an append only database. Built on top of the Slick, our API combine the power of Scala type-checking with the benefits of using an immutable database.
 
 - We show how we implemented SlickChair's automatic paper-reviewer assignment algorithm. Unfortunately, accounting for both \pcm preferences and conflicts of interest leads to an NP-Complete problem. While aiming for the optimal assignment is not possible, we opted for a very simple heuristic algorithm implemented with the help of the OscaR operational research library. 
 
@@ -37,15 +37,15 @@ In SlickChair, we address this problem by supporting three types of authenticati
 
 The implementation of Facebook and Google login uses the OAuth 2.0 protocol @oauth2, and is provided by the SecureSocial authentication module for the Play framework @securesocial.
 
-In addition to associating each visitor to a unique identity, authentication allows to get a valid email address contact users. When users login with Facebook or Google account, we trust the email address returned by the OAuth protocol, given users of these networks are required to confirm their email address. In the case of login via email, the process is obviously more complex. After providing his email address, a new user has to open his email client follow a validation link. From here, he is asked his first name, last name, and a new password (of minimum 8 characters) before completing the registration. Passwords are hashed using the bcrypt algorithm and stored in the database. SlickChair also offers options to change password or recover an account in case of forgotten password. Although authentication via email address adds complexity to the system, it is useful to users that use different email accounts for their personal and professional life.
+In addition to associating each visitor to a unique identity, authentication allows to get a valid email address contact users. When users login with Facebook or Google account, we trust the email address returned by the OAuth protocol, given users of these networks are required to confirm their email address. In the case of login via email, the process is obviously more complex. After providing his email address, a new user has to open his email client and follow a validation link. From here, he is asked his first name, last name, and a new password (of minimum 8 characters) before completing the registration. Passwords are hashed using the bcrypt algorithm and stored in the database. SlickChair also offers options to change password or recover an account in case of forgotten password. Although authentication via email address adds complexity to the system, it is useful to users that use different email accounts for their personal and professional life.
 
-In SlickChair, we identify each user by a single email address. Some other \cmss provide the ability to link multiple email addresses to a single identity and to multiple merge accounts into one. We believe that this functionality can sometimes be confusing, and adds unnecessary complexity to the system. As a side note, this design makes it possible for a user to close the Facebook or Google account he used to login, and claim his identity by going thought the process of logging in using the corresponding email address.
+In SlickChair, we identify each user by a single email address. Some other \cmss provide the ability to link multiple email addresses to a single identity and to multiple merge accounts into one. We believe that this functionality can sometimes be confusing, and adds unnecessary complexity to the system. As a side note, this design makes it possible for a user to close the Facebook or Google account he used to login, and claim his identity by going through the process of logging in using the corresponding email address.
 
 ### User interfaces
 
 [^essential]: The authors of @mauro2005 identified nine *typical functionalities* of \cmss which roughly correspond to the functionalities provided by SlickChair interfaces.
 
-Building SlickChair, our focused was on creating a simple and extensible system rather than offering a lot of configuration options. As a system becomes more complete, it's complexity is likely to go up, and maintenance and extensions becomes harder. SlickChair provides the essential components[^essential] to run an online peer review process, listed below as interfaces available for each user role:
+Building SlickChair, our focus was on creating a simple and extensible system rather than offering a lot of configuration options. As a system becomes more complete, its complexity is likely to go up, and maintenance and extensions becomes harder. SlickChair provides the essential components[^essential] to run an online peer review process, listed below as interfaces available for each user role:
 
 - Author:
   
@@ -73,7 +73,7 @@ Building SlickChair, our focused was on creating a simple and extensible system 
 
     - Send emails and change conference phases
 
-The *Change user roles* interface allows a \pc to designate certain users as co-chairs or members of the program committee. While it is also possible to define all \pcms and chairs in advance in a configuration file, using the *Change user roles* interface has the advantage to allow each user to chose his favourite login method. This accounts for the typical situation of users that forward messages send to their professional email addresses to another service such as Gmail.
+The *Change user roles* interface allows a \pc to designate certain users as co-chairs or members of the program committee. While it is also possible to define all \pcms and chairs in advance in a configuration file, using the *Change user roles* interface has the advantage to allow each user to chose his favourite login method. This accounts for the typical situation of users that forward messages sent to their professional email addresses to another service such as Gmail.
 
 The *Send emails and change conference phases* interface is related to the conference workflow, discussed in the following subsection. *Assign submissions for review* is discussed in detail #paper-reviewer-assignment. Other interfaces are straightforward and wont be described for brevity. 
 
@@ -81,7 +81,7 @@ The *Send emails and change conference phases* interface is related to the confe
 
 In order to coordinate the overall conference peer review process, we organised it as a chronological sequence on phases. Each phase has a set of interfaces enabled during the time frame allocated to this phase. We identified the following seven phases that may correspond to the workflow of a small conference: *Setup, Submission, Bidding, Assignment, Review, Notification and Finished*.
 
-In addition to the configuration of enabled interfaces, each phase is defined with a function to generate emails, and function to generate an optional warning:
+In addition to the configuration of enabled interfaces, each phase is defined with a function to generate emails, and function to generate an optional warning.
 
     case class Phase(
       configuration: Configuration,
@@ -89,9 +89,9 @@ In addition to the configuration of enabled interfaces, each phase is defined wi
       warning: Database => Option[String]
     )
 
-SlickChair uses the `emails` function before transitioning to a given phase to help the \pc in the redaction of notification emails, by suggesting recipients, subject and content of messages to be sent when transitioning to this phase. If a warning is returned by the second function, it will be display to the \pc before he confirms the change of phase.
+SlickChair uses the `emails` function before transitioning to a given phase to help the \pc in the writing of notification emails, by suggesting recipients, subject and content of messages to be sent when transitioning to this phase. If a warning is returned by the second function, it will be displayed to the \pc before he confirms the change of phase.
 
-Conferences of different sizes and topics might want to use different workflows. In the current stage of the project, such configuration has be done at source code level. As an example, we will show the changes needed to add a new component to the conference workflow. Suppose that some \pcms are careless about their reviewing responsibilities and do not respect the delays set by the \pc. The \pc might want to send a reminder to the \pcms that have not yet completed their reviews. This could be implemented by adding a *Review Reminder*phase between *Review* and *Notification*:
+Conferences of different sizes and topics might want to use different workflows. In the current stage of the project, such configuration has to be done at source code level. As an example, we will show the changes needed to add a new component to the conference workflow. Suppose that some \pcms are careless about their reviewing responsibilities and do not respect the delays set by the \pc. The \pc might want to send a reminder to the \pcms that have not yet completed their reviews. This could be implemented by adding a *Review Reminder*phase between *Review* and *Notification*.
 
     Phase(
       Configuration("Review Reminder",
@@ -105,7 +105,7 @@ Conferences of different sizes and topics might want to use different workflows.
       noWarning
     )
 
-Where `noWarning` a dummy function that returns no warning, and `lateReviewerEmails` is a function returning the email addresses of all late reviewers. In order to obtain this information, we need to use three tables of the database: the `assignments` and `reviews` tables are relations between \pcms and submissions, and the `persons` table contains personal information of SlickChair users:
+Where `noWarning` a dummy function that returns no warning, and `lateReviewerEmails` is a function returning the email addresses of all late reviewers. In order to obtain this information, we need to use three tables of the database: the `assignments` and `reviews` tables are relations between \pcms and submissions, and the `persons` table contains personal information of SlickChair users.
 
     def lateReviewerEmails(db: Database) = {
       val assignmentPairs = db.assignments
@@ -123,13 +123,13 @@ This function illustrates the use of the Slick database query library. Aside fro
 
 # Data model
 
-An original requirement of SlickChair was the ability to log all the actions and events that occurred in the system. To do so, a traditional approach would be to use the logging functionalities build into the Play framework. Concretely, this would corresponds to appending a timestamp and a messages to a text file whenever an interesting event occurs. We took an alternative approach of in memorizing every change at the level of the database.
+An original requirement of SlickChair was the ability to log all the actions and events that occurred in the system. To do so, a traditional approach would be to use the logging functionalities built into the Play framework. Concretely, this would correspond to appending a timestamp and a message to a text file whenever an interesting event occurs. We took an alternative approach of memorizing every change at the level of the database.
 
-The idea of append only databases is not new, but it is becoming more and more relevant as the prices of storage go down. The Datomic database @datomic, which recently entered the market, is build around this idea of never altering or deleting data. Instead, changes are made by adding new version of the existing data or marking it as being invalid. Datomic is a proprietary software and does not fit well the open-source platform SlickChair is build upon. In order to suite our needs, we build a small layer on top of Slick to manipulate versioned data. The semantic of the API presented in this section are inspired by Datomic's Clojure API @datomicapi.
+The idea of append only databases is not new, but it is becoming more and more relevant as the prices of storage go down. The Datomic database @datomic, which recently entered the market, is built around this idea of never altering or deleting data. Instead, changes are made by adding new versions of the existing data or marking it as being invalid. Datomic is a proprietary software and does not fit well the open-source platform SlickChair is build upon. In order to suit our needs, we built a small layer on top of Slick to manipulate versioned data. The semantic of the API presented in this section are inspired by Datomic's Clojure API @datomicapi.
 
 ### Database as a value
 
-One of the core concept of functional programming the manipulation of immutable data. But how could a database, this always mutating, shared entity, be seen as immutable? We define a `Database` to be a view of the data on at a particular time `date`:
+One of the core concept of functional programming is the manipulation of immutable data. But how could a database, this shared and always mutating entity, be seen as immutable? We define a `Database` to be a view of the data at a particular time `date`.
 
     case class Database(
         val date: DateTime, val s: Session) {
@@ -157,7 +157,7 @@ A `Connection` allows to retrieve the  current value of the database, and insert
                                       Database)
     }
 
-The last element of our API is the `Model` trait, which enforces that elements stored in tables are case classes with a `metadata` field providing the appropriate information:
+The last element of our API is the `Model` trait, which enforces that elements stored in tables are case classes with a `metadata` field providing the appropriate information.
 
     case class Id[M](value: UUID)
 
@@ -172,9 +172,9 @@ This API takes full advantage of Scala and Slick type-checking capabilities. Tha
 
 ### Implementation
 
-Under the hood, SlickChair create multiple database records for a given *natural key*. When using the `Database` object, the user queries is composed with a temporal filter that extracts the most recent records where created before the time `date`. This corresponds to the *Type 2 slowly changing dimension management methodology*, as described in @kimball2002.
+Under the hood, SlickChair creates multiple database records for a given *natural key*. When using the `Database` object, the user queries is composed with a temporal filter that extracts the most recent records that where created before the time `date`. This corresponds to the *Type 2 slowly changing dimension management methodology*, as described in @kimball2002.
 
-This approach has the advantage to no require any update, new records are simply appended to tables and only become visible for the newly accessed `Database` values. It also minimises the number of tables, which is beneficial because tables directly manipulated by the user via Slick's domain-specific language. We development this API with H2 and PostgreSQL, but as the implementation uses the Slick generic `JdbcDriver`, it should be compatible with all database systems supported by Slick.
+This approach has the advantage of not requiring any update, new records are simply appended to tables and only become visible for the newly accessed `Database` values. It also minimises the number of tables, which is beneficial because tables are directly manipulated by the user via Slick's domain-specific language. We developed this API with H2 and PostgreSQL, but as the implementation uses the Slick generic `JdbcDriver`, it should be compatible with all database systems supported by Slick.
 
 Finally, we should note that in it's current stage, our *database as a value* API does not allow the expression of transactions. The timestamp based implementation is by nature atomic: the temporal filter used on every table ensures that the database will be viewed either before or after a group of insertions. However it is currently impossible to express a *transaction*, that is, to enforce that the database is not modified between the time it's value is queried and the insertions are effective. Fortunately SlickChair does not require transactions.
 
@@ -214,7 +214,8 @@ OscaR is a Scala library for Operations Research @oscar. Among other techniques,
 
 In this code, the `add` function allows to add constraints to the definition of the problem. It is used to enforce that all submissions have the same number of review, all reviewers have the same of review, and no conflicting assignment are made. The `maximize()` `search {}` and `onSolution {}` `start()` constructs are used to define the objective function, the search heuristic and start the resolution. Before getting to this stage, some preprocessing is required to aggregate and prepare the data, which notably includes the addition of dummy submissions such that repartition of reviews is perfectly balanced among reviewers.
 
-# Conclusion and future work:
+
+# Conclusion and future work
 
 In this report, we introduced the SlickChair \cms. By going through some of the internals of the system, we highlighted his main strengths compared to the existing solutions. In particular, we also presented our design for the manipulation versioned data using an immutable database. While a \cms could be labelled as rather simple IT system, we believe that the experience we gained building SlickChair can be beneficial to the future design of comparable applications.
 
