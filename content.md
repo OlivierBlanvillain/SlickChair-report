@@ -1,7 +1,6 @@
 # ABSTRACT {-}
 
-Ut[^name] in dolor et magna tincidunt mattis. Proin id pulvinar arcu. Donec ac turpis consectetur, dignissim eros at, mollis orci. Nunc sed tincidunt justo, eu dapibus risus. Vestibulum nisi mi, tempus nec cursus at, accumsan vitae metus. Cras mattis, velit ut convallis lacinia, metus enim rutrum sapien, quis egestas ante ipsum ut lacus. Aliquam erat volutpat. Mauris vitae commodo nisi. Nunc iaculis, enim vulputate cursus interdum, sapien libero sodales diam, viverra molestie diam tellus eu felis. Quisque gravida porttitor vulputate. Duis nec neque facilisis, porttitor ante id, molestie sem. Vivamus pellentesque venenatis est, ut consequat arcu tempus a. Phasellus ullamcorper nunc vel rhoncus suscipit. Curabitur commodo ornare accumsan. Mauris vitae lorem arcu. Mauris vel turpis mi. Fusce faucibus congue ante, eu gravida sem. Cum sociis natoque penatibus et magnis dis.
-
+Ut nsem in dolor et magna tincidunt mattis. Proin id pulvinar arcu. Donec ac turpis consectetur, dignissim eros at, mollis orci. Nunc sed tincidunt justo, eu dapibus risus. Vestibulum nisi mi, tempus nec cursus at, accumsan vitae metus. Cras mattis, velit ut convallis lacinia, metus enim rutrum sapien, quis egestas ante ipsum ut lacus. Aliquam erat volutpat. Mauris vitae commodo nisi. Nunc iaculis, enim vulputate cursus interdum, sapien libero sodales diam, viverra molestie diam tellus eu felis. Quisque gravida porttitor vulputate. Duis nec neque facilisis, porttitor ante id, molestie sem.
 
 # Introduction
 
@@ -13,7 +12,7 @@ The importance and confidentiality of the data manipulated by a \cms implies tha
 
 We present SlickChair, an open-source \cms written in Scala. Build with the Play framework and the Slick database access library, SlickChair provides a highly flexible and extensible solution to manage peer review processes. This report makes the following contributions:
 
-- We briefly introduce SlickChair and present the aspects where this new system provides a gain compared already established \cmss such as EasyChair. In particular, SlickChair offers the ability to authenticate using a Facebook or Google account, thus replacing the tedious password creation and email validation process.
+- We briefly introduce SlickChair functionalities and present the aspects where this new system provides a gain compared already established \cmss such as EasyChair. In particular, SlickChair offers the ability to authenticate using a Facebook or Google account, thus replacing the tedious password creation and email validation process.
 
 - We present a new API to manipulate versioned date on an append only database. Build on top of the Slick, our API combine the power of Scala type-checking with the benefits of using an immutable database.
 
@@ -44,7 +43,7 @@ In SlickChair, we identify each user by a single email address. Some other \cmss
 
 ### User interfaces
 
-[^essential]: The authors of @mauro2005 identified nine *typical* functionalities of \cmss which roughly correspond to the functionalities provided by SlickChair interfaces.
+[^essential]: The authors of @mauro2005 identified nine *typical functionalities* of \cmss which roughly correspond to the functionalities provided by SlickChair interfaces.
 
 Building SlickChair, our focused was on creating a simple and extensible system rather than offering a lot of configuration options. As a system becomes more complete, it's complexity is likely to go up, and maintenance and extensions becomes harder. SlickChair provides the essential components[^essential] to run an online peer review process, listed below as interfaces available for each user role:
 
@@ -217,4 +216,8 @@ In this code, the `add` function allows to add constraints to the definition of 
 
 # Conclusion and future work:
 
-- Macros (remove boilerplate on the database API)
+In this report, we introduced the SlickChair \cms. By going through some of the internals of the system, we highlighted his main strengths compared to the existing solutions. In particular, we also presented our design for the manipulation versioned data using an immutable database. While a \cms could be labelled as rather simple IT system, we believe that the experience we gained building SlickChair can be beneficial to the future design of comparable applications.
+
+Future work could investigate the integration of external tools to simplify the tasks of authors and \pcms. For instance, a PDF metadata extraction tool could be used to pre-fill the new submission using the title, abstract and list of authors extracted from an uploaded PDF file (see @lipinski2013 for an evaluation of the freely available solution). To help in the detection of conflicts of interest, we could a co-authorship database such as DBLP @dblp to automatically mark conflicts between \pcms and authors that have published together.
+
+We are confident that the simplicity and flexibility of the modern tools and techniques SlickChair in build upon will catch the attention of the community and exert a pull on the conference organisers to consider SlickChair for their future conferences. Interested readers are invited to try out the demo and check out the project source code at <http://slickchair.org/>.
