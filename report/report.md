@@ -177,7 +177,7 @@ Under the hood, SlickChair creates multiple database records for a given *natura
 
 This approach has the advantage of not requiring any update, new records are simply appended to tables and only become visible for the newly accessed `Database` values. It also minimises the number of tables, which is beneficial because tables are directly manipulated by the user via Slick's domain-specific language. We developed this API with H2 and PostgreSQL, but as the implementation uses the Slick generic `JdbcDriver`, it should be compatible with all database systems supported by Slick.
 
-Finally, we should note that in its current stage, our *database as a value* API does not allow the expression of transactions. The timestamp based implementation is by nature atomic: the temporal filter used on every table ensures that the database will be viewed either before or after a group of insertions. However it is currently impossible to express a *transaction*, that is, to enforce that the database is not modified between the time its value is queried and the insertions are effective. Fortunately SlickChair does not require transactions.
+Finally, we should note that in its current stage, our *database as a value* API does not allow the expression of *transactions*. The timestamp based implementation is by nature atomic: the temporal filter used on every table ensures that the database will be viewed either before or after a group of insertions. However it is currently impossible to express a *transaction*, that is, to enforce that the database is not modified between the time its value is queried and the insertions are effective. Fortunately SlickChair does not require transactions.
 
 
 # Paper-reviewer assignment
@@ -198,19 +198,17 @@ While each individual variant can be solved in polynomial time, the combination 
 
 ### OscaR formulation
 
-OscaR is a Scala library for Operations Research @oscar. Amongst other techniques, it allows to formulate problems using constraint programming. Given a matrix of `preferences`, a list of `conflicts`, and four integers `nPapers`, `nReviewers`, `nReviewPerPaper` and `nReviewsPerReviewer`, the following program searches for an assignment maximizing the sum of reviewer satisfaction:
+OscaR is a Scala library for operational research @oscar. Amongst other techniques, it allows to formulate problems using constraint programming. Given a matrix of `preferences`, a list of `conflicts`, and four integers `nPapers`, `nReviewers`, `nrp` (the number of reviews per paper) and `nrr` (the number of reviews per reviewer), the following program searches for an assignment maximizing the sum of reviewer satisfaction:
 
     val m = makeMatrix(nReviewers, nPapers, 0 to 1)
-
-    0 until nPapers foreach { j =>
-      add(sum(m col j) == nReviewPerPaper) }
-    0 until nReviewers foreach { i =>
-      add(sum(m row i) == nReviewsPerReviewer) }
-    conflicts foreach {
-      add(m(_, _) == 0) }
+    
+    m.columns.foreach{col => add(sum(col) == nrr)}
+    m.rows.foreach{row => add(sum(row) == nrp)}
+    conflicts.foreach{c => add(m(c) == 0)}
 
     maximize(weightedSum(preferences, m)) search {
-      binaryMaxDegree(m.flatten.toSeq) }
+      binaryMaxDegree(m.flatten.toSeq)
+    }
     onSolution { return m } start()
 
 In this code, the `add` function allows to add constraints to the definition of the problem. It is used to enforce that all submissions and reviews have the same number of reviews, and no conflicting assignment are made. The `maximize()` `search{}` and `onSolution{} start()` constructs are used to define the objective function, the search heuristic and start the resolution. Before getting to this stage, some preprocessing is required to aggregate and prepare the data, which notably includes the addition of dummy submissions so that repartition of reviews is perfectly balanced among reviewers.

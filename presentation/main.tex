@@ -1,12 +1,57 @@
 \documentclass{beamer}
 
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[autostyle=false, style=english]{csquotes}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage[tableposition=top, font=bf]{caption}
+\usepackage{beramono}
+\usepackage{balance}
+\usepackage{enumerate}
+\usepackage[shortlabels]{enumitem}
+\usepackage{graphicx}
+\usepackage{gnuplottex}
+\usepackage{listings}
+\usepackage{quoting}
+\usepackage{setspace}
+\usepackage{xcolor}
+\usepackage{xspace}
+\usepackage{hypcap}
+\usepackage[framemethod=tikz]{mdframed}
+\usepackage{pgf-pie}
+\usepackage{changepage}
+
+\usetikzlibrary{shadows}
+\MakeOuterQuote{"}
+
 \setbeamertemplate{navigation symbols}{}
 
-\begin{document}
+\graphicspath{{./img/}}
 
-\title{Simple Beamer Class}
-\author{Sascha Frank} 
-\date{\today} 
+\lstdefinelanguage{Scala}
+{morekeywords={abstract, case, catch, char, class, def, else, extends, final, if, import, match, module, new, null, object, override, package, private, protected, public, return, super, this, throw, trait, try, type, val, var, with, implicit, macro, sealed, true, false},
+  sensitive,
+  morecomment=[l]//,
+  morecomment=[s]{/*}{*/},
+  morestring=[b]",
+  morestring=[b]',
+  showstringspaces=false
+}[keywords, comments, strings]
+
+\lstset{tabsize=2,
+  basicstyle=\ttfamily\fontsize{8pt}{1em}\selectfont,
+  keywordstyle=\bfseries,
+  commentstyle=\itshape\rmfamily,
+  language=scala,breaklines=false,mathescape=false,showspaces=false,showstringspaces=false,classoffset=0,belowskip=0px
+}
+
+\title{The SlickChair Conference Management System}
+\author{Olivier Blanvillain}
+\date{\today}
+
+\begin{document}
 
 \frame{\titlepage} 
 
@@ -14,6 +59,8 @@
   \frametitle{Table of contents}
   \tableofcontents
 } 
+
+\input{figures.tex}
 
 \input{presentation.mdtex}
 
