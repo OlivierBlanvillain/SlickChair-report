@@ -4,7 +4,7 @@
 
 \marketpie
 
-# Overview of SickChair
+# Overview of SlickChair
 
 ## SlickChair Technologie Stack
 
@@ -34,7 +34,7 @@ It's demo time!
           ...
         )
 
-## Reminder for late reviewers
+## Reminder for late reviewers phase example
 
         Phase(
           
@@ -43,10 +43,10 @@ It's demo time!
             pcmemberCanComment=true,
             chairCanDecideOnAcceptance=true),
           
-          { db => Email(
+          { db => List(Email(
             lateReviewerEmails(db),
             "Reminder: review deadline",
-            "Dear Program Committee Member, ...")},
+            "Dear Program Committee Member, ...")) },
           
           { _ => None }
           
@@ -79,15 +79,29 @@ It's demo time!
 
     - Ok for debugging
     
-    - Bad to present in a UI
+    - Bad to present to users
     
-    - Bad to query
+    - Hard to query
     
-    - Forget about rollbacks
+- Idea: save all changes made on the database!
 
-- Why do we even U and D in CRUD persistent storage?
+## Vertioned data and immutable database: Implementation
 
-- Idea: version everything in the database!
+- All records must have an *updatedAt* field
+
+- Append only: updated records are added with new timestamps
+    
+    - No additional tables for the history
+
+    - Mutiple rows with the same natural key
+
+- *Database* objects carry a *TemporalFilter* used on all tables
+
+    - *Database* objects are values
+    
+    - Queries are pure functions
+    
+    - Groups of *inserts/updates* are atomic
 
 ## Vertioned data and immutable database: DSL
 
@@ -107,31 +121,11 @@ It's demo time!
           def insert(x: List[Model[_]]): (Database, Database)
         }
 
-## Vertioned data and immutable database: Implementation
-
-- All case classes must have a *updatedAt* field
-
-- Updates are just appends with a newer timestamp
-
-    - Multiple records per natural key
-    
-    - No additional tables
-
-- Database objects have a *TemporalFilter* injected in queries
-
-    - Database are values
-    
-    - Queries are pure functions
-    
-    - Everything group of *inserts* is atomic
-
-- Downside: cannot express transactions
-
 # Automatic Paper-Reviewer assignment
 
 ## Automatic Paper-Reviewer assignment
 
-- Inputs of the problem:
+- Inputs:
 
     - Set of *papers*
     - Set of *reviewers*
@@ -165,13 +159,13 @@ It's demo time!
 - My personal takeaways:
 
     - I'm never writing another line of SQL
-    - Who needs test when you have type-checking?
+    - Who needs tests when you have type-checking?
     - Agile development worked very well in this project
 
 - Future work:
 
-    - PDF metadata extraction, Co-authorship, Plagiarism
-    - Turn the vertioned data DSL into proper a library
+    - PDF metadata extraction, co-authorship, plagiarism
+    - Turn the vertioned data DSL into a proper library
     - Scala.js
 
 ## Thank you for your attention!
@@ -180,7 +174,7 @@ Questions?
 
 ---
 
-## Slick Query example, compiled SQL
+## Bonus slide: Slick example compiled
 
 ```sql
 SELECT x2.x3 FROM

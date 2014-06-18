@@ -1,6 +1,6 @@
 # ABSTRACT {-}
 
-Online \cmss have turned into an essential tool in the organisation of scientific conferences. Their main objective is to minimise the cost of operation and communication while maintaining the high quality of the peer review process. As the web becomes the primary platform to run software, users develop new expectations: one-click authentication, revision history and mobile device support; these are examples of features one expects to see in today's web applications. In this document, we report our experience building SlickChair: a modern \cms built with state-of-the-art web application technologies. We present the authentication mechanism of SlickChair, describe the structure of a conference workflow, introduce a new API to manipulate versioned data, and present our implementation of an automatic paper-reviewer assignment algorithm.
+Online \cmss have turned into an essential tool in the organisation of scientific conferences. Their main objective is to minimise the cost of operation and communication while maintaining the high quality of the peer review process. As the web becomes the primary platform to run software, users develop new expectations: one-click authentication, revision history and mobile device support; these are examples of features one expects to see in today's web applications. In this document, we report our experience building SlickChair: a modern \cms built with state-of-the-art web application technologies. We present the authentication mechanism of SlickChair, describe the structure of a typical peer-review process, introduce a new API to manipulate versioned data, and present our implementation of an automatic paper-reviewer assignment algorithm.
 
 
 # Introduction
@@ -95,28 +95,36 @@ SlickChair uses the `emails` function before transitioning to a given phase to h
 Conferences of different sizes and topics might want to use different workflows. In the current stage of the project, such configuration has to be done at source code level. As an example, we will show the changes needed to add a new component to the conference workflow. Suppose that some \pcms are careless about their reviewing responsibilities and do not respect the delays set by the \pc. The \pc might want to send a reminder to the \pcms that have not yet completed their reviews. This could be implemented by adding a *Review Reminder*phase between *Review* and *Notification*.
 
     Phase(
+      
       Configuration("Review Reminder",
         pcmemberCanReview=true,
         pcmemberCanComment=true,
         chairCanDecideOnAcceptance=true),
-      { db => Email(
+      
+      { db => List(Email(
         lateReviewerEmails(db),
         "Reminder: review deadline",
-        "Dear Program Committee Member, ...")},
+        "Dear Program Committee Member, ...")) },
+      
       noWarning
+      
     )
 
 Where `noWarning` a dummy function that returns no warning, and `lateReviewerEmails` is a function returning the email addresses of all late reviewers. In order to obtain this information, we need to use three tables of the database: the `assignments` and `reviews` tables are relations between \pcms and submissions, and the `persons` table contains personal information of SlickChair users.
 
     def lateReviewerEmails(db: Database) = {
+      
       val assignmentPairs = db.assignments
         .filter(_.value)
         .map(a => (a.personId, a.paperId))
+      
       val reviewsPairs = db.reviews
         .map(r => (r.personId, r.paperId))
+      
       (assignmentPairs diff reviewsPairs)
         .join(db.persons).on(_._1 is _.id)
         .map(_._2.email).list(db.s)
+        
     }
 
 This function illustrates the use of the Slick database query library. Aside from `.join().on()` and `.list(db.s)`, the code would be identical if manipulating sets from the Scala collections. In reality, the entire body of this function is compiled into a SQL query. The `.join().on()` construct allows to join two tables on certain columns. The `.list(db.s)` wraps up the query definition and returns the result of execution as a list of Scala objects. 
@@ -204,7 +212,7 @@ OscaR is a Scala library for operational research @oscar. Amongst other techniqu
     
     m.columns.foreach{col => add(sum(col) == nrr)}
     m.rows.foreach{row => add(sum(row) == nrp)}
-    conflicts.foreach{c => add(m(c) == 0)}
+    conflicts.foreach{c => add(m(c._1, c._2) == 0)}
 
     maximize(weightedSum(preferences, m)) search {
       binaryMaxDegree(m.flatten.toSeq)
