@@ -1,0 +1,5 @@
+add_cus_dep('md', 'mdtex', 0, 'md2tex');
+sub md2tex {
+  return system("
+    cat $_[0].md | pandoc --listings -t beamer -o $_[0].mdtex");
+};
